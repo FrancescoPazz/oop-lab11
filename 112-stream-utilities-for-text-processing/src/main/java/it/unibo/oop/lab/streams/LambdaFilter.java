@@ -6,7 +6,12 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -38,7 +43,51 @@ public final class LambdaFilter extends JFrame {
         /**
          * Commands.
          */
-        IDENTITY("No modifications", Function.identity());
+        IDENTITY("No modifications", Function.identity()),
+        LOWER("To lower", new Function<String, String>(){
+            @Override
+            public String apply(String t) {
+                return t.toLowerCase();
+            }
+        }),
+        COUNT("Count char", new Function<String, String>(){
+            @Override
+            public String apply(String t) {
+                return String.valueOf(t.length());
+            }
+        }),
+        COUNTLINES("Count nr. of lines", new Function<String, String>(){
+            @Override
+            public String apply(String t) {
+                return String.valueOf(t.lines().count());
+            }
+        }),
+        ALPHABETICAL("Words in alphabetical order", new Function<String, String>(){
+            @Override
+            public String apply(String t) {
+                List<String> ordered = new ArrayList<>();
+
+                for (String word : t.split(" ")) {
+                    ordered.add(word);
+                }
+                
+                return ordered.stream().sorted((e1, e2) -> e1.compareTo(e2)).reduce((e1, e2) -> e1+" "+e2).get();
+            }
+        }),
+        COUNTPERWORD("Count per word", new Function<String, String>(){
+            @Override
+            public String apply(String t) {
+                List<String> wordList = new ArrayList<>();
+                for (String word : t.split(" ")) {
+                    wordList.add(word);
+                }
+                return wordList.stream()
+                                .collect(Collectors.groupingBy(e -> e.toString(), Collectors.counting())).toString(); 
+            }
+        });
+
+        
+
 
         private final String commandName;
         private final Function<String, String> fun;
@@ -56,6 +105,7 @@ public final class LambdaFilter extends JFrame {
         public String translate(final String s) {
             return fun.apply(s);
         }
+
     }
 
     private LambdaFilter() {
